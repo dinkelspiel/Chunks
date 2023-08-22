@@ -1,0 +1,18 @@
+name: KeiiChunks
+version: '${project.version}'
+main: dev.keii.keiichunks.KeiiChunks
+api-version: '1.20'
+
+commands:
+  map:
+    description: Opens the map
+    usage: /map
+    permission: keii.map
+#  save:
+#    description: Saves claim data
+#    usage: /save
+#    permission: keii.save
+#  load:
+#    description: Saves load data
+#    usage: /load
+#    permission: keii.load
