@@ -49,3 +49,16 @@ dbName: <database_name>
 dbUser: <user_name>
 dbPassword: <password>
 ```
+
+## Restart the server
+
+Now restart the server and the database should be setup. If you already have custom server resource packs on the server then you will want to merge that resource pack with [the plugin resourcepack](https://github.com/shykeiichi/plugin-resourcepack/blob/main/release.zip) using something like https://merge.elmakers.com/.
+
+## If your database wasn't setup automatically
+
+If the database wasn't updated automatically then you will want to update the database manually by running.
+```bash
+$ mysql -u <user_name> -p <database_name> < database.sql
+```
+database.sql is located in plugin/KeiiChunks.
+
