@@ -34,10 +34,6 @@ permissions:
       keii.chunks.staff.load: true
   keii.chunks.staff.message:
     description: Get sent staff messages
-  keii.chunks.staff.save:
-    description: Save the data
-  keii.chunks.staff.load:
-    description: Load the data
   keii.chunks.staff.claimpower:
     description: Modify claim power for a user
   keii.chunks.staff.chunkoverride:
