@@ -1,18 +1,44 @@
-name: KeiiChunks
+name: Chunks
 version: '${project.version}'
-main: dev.keii.keiichunks.KeiiChunks
+main: dev.keii.chunks.Chunks
 api-version: '1.20'
 
 commands:
   map:
     description: Opens the map
     usage: /map
-    permission: keii.map
-#  save:
-#    description: Saves claim data
-#    usage: /save
-#    permission: keii.save
-#  load:
-#    description: Saves load data
-#    usage: /load
-#    permission: keii.load
+    permission: keii.chunks.map
+  chunks:
+    description: Chunks plugin
+    usage: /chunks [info,help,save,load]
+    permission: keii.chunks.info
+  chunkoverride:
+    description: Set chunk override
+    usage: /chunkoverride [player]?
+    permission: keii.chunks.staff.chunkoverride
+  claimpower:
+    description: Set claim power
+    usage: /claimpower [set,add,remove] <player> <number>
+    permission: keii.chunks.staff.claimpower
+permissions:
+  keii.chunks.map:
+    description: Permission to see the map
+    children:
+      test.foo: true
+      test.bar: false
+  keii.chunks.staff.*:
+    description: Permission to see the map
+    children:
+      keii.chunks.staff.message: true
+      keii.chunks.staff.save: true
+      keii.chunks.staff.load: true
+  keii.chunks.staff.message:
+    description: Get sent staff messages
+  keii.chunks.staff.save:
+    description: Save the data
+  keii.chunks.staff.load:
+    description: Load the data
+  keii.chunks.staff.claimpower:
+    description: Modify claim power for a user
+  keii.chunks.staff.chunkoverride:
+    description: Override chunk permissions

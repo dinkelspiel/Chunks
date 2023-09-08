@@ -38,7 +38,7 @@ MariaDB [(none)]> FLUSH PRIVILEGES;
 
 ## Update config.yml
 
-In the server directory go to `plugins/KeiiChunks/config.yml`. Create the file if it doesn't exist and add/update this to the file.
+In the server directory go to `plugins/Chunks/config.yml`. Create the file if it doesn't exist and add/update this to the file.
 
 All of the entries in arrows '<>' are the same as the inputs you put in the above mariadb configuration.
 
@@ -60,5 +60,5 @@ If the database wasn't updated automatically then you will want to update the da
 ```bash
 $ mysql -u <user_name> -p <database_name> < database.sql
 ```
-database.sql is located in plugin/KeiiChunks.
+database.sql is located in plugin/Chunks.
 
