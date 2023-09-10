@@ -1,7 +1,9 @@
 package dev.keii.barter.commands;
 
 import dev.keii.chunks.Chunks;
+import dev.keii.chunks.Config;
 import dev.keii.chunks.Database;
+import dev.keii.chunks.Responses;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
@@ -27,12 +29,28 @@ public class CommandChunks implements CommandExecutor {
                         .appendNewline()
                         .append(Component.text("    help - Get help for chunks").color(NamedTextColor.YELLOW))
                         .appendNewline()
+                        .append(Component.text("    reload - Reload chunks config").color(NamedTextColor.YELLOW))
+                        .appendNewline()
                         .append(Component.text("Staff:").color(NamedTextColor.YELLOW))
                         .appendNewline()
-                        .append(Component.text("/claimpower [set,add,remove] <player> <amount> - Modify claimpower of user").color(NamedTextColor.YELLOW))
+                        .append(Component.text("/claimpower [set,add,remove] <player> <amount> - Modify claimpower of user").color(NamedTextColor.GOLD))
                         .appendNewline()
-                        .append(Component.text("/chunkoverride <player?> - Override chunkpermissions").color(NamedTextColor.YELLOW))
+                        .append(Component.text("/chunkoverride <player?> - Override chunkpermissions").color(NamedTextColor.GOLD))
         );
+    }
+
+    private void reload(CommandSender sender)
+    {
+        if(!sender.hasPermission("keii.chunks.reload"))
+        {
+            sender.sendMessage(Responses.noPermissionResponse);
+            return;
+        }
+
+        Chunks.config = new Config();
+        Chunks.config.loadConfig();
+
+        Chunks.sendMessageToStaff(Component.text("Reloaded Chunks config!").color(NamedTextColor.YELLOW));
     }
 
     @Override
@@ -47,6 +65,9 @@ public class CommandChunks implements CommandExecutor {
         {
             case "info":
                 sendInfo(sender);
+                break;
+            case "reload":
+                reload(sender);
                 break;
             case "help":
             default:

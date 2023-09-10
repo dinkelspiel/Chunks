@@ -13,7 +13,6 @@ import java.sql.*;
 public class Database {
     public static String createDatabaseSQL =
             """
-                    START TRANSACTION;
                     CREATE TABLE IF NOT EXISTS `claim` (
                       `id` bigint(20) UNSIGNED NOT NULL,
                       `user_id` bigint(20) UNSIGNED NOT NULL,
@@ -63,23 +62,23 @@ public class Database {
                     ALTER TABLE `claim_permission`
                       ADD CONSTRAINT `claim_permission_claim_id_foreign` FOREIGN KEY (`claim_id`) REFERENCES `claim` (`id`),
                       ADD CONSTRAINT `claim_permission_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`);
-                    COMMIT;""";
-
-    static String DB_URL = null;
-    static String DB_NAME = null;
-    static String DB_USER = null;
-    static String DB_PASSWORD = null;
+                    """;
 
     public static void initializeDatabase()
     {
         try {
             Connection connection = getConnection();
-            Statement statement = connection.createStatement();
+            connection.setAutoCommit(false);
 
-            Chunks.sendMessageToStaff(Component.text("Database initialization succeeded").color(NamedTextColor.GREEN));
+            Statement statement = connection.createStatement();
 
             statement.execute(createDatabaseSQL);
 
+            Chunks.sendMessageToStaff(Component.text("Database initialization succeeded").color(NamedTextColor.GREEN));
+
+            connection.commit();
+            statement.close();
+            connection.close();
         } catch (SQLException e) {
             Chunks.sendMessageToStaff(Component.text("Fatal Database Error: " + e.getMessage()).color(NamedTextColor.RED));
         }
@@ -87,9 +86,9 @@ public class Database {
 
     public static Connection getConnection() {
         try {
-            final String url = DB_URL + DB_NAME;
+            final String url = Chunks.config.dbUrl + Chunks.config.dbName;
 
-            return DriverManager.getConnection(url, DB_USER, DB_PASSWORD);
+            return DriverManager.getConnection(url, Chunks.config.dbUser, Chunks.config.dbPassword);
         } catch (SQLException e) {
             Chunks.sendMessageToStaff(Component.text("Fatal Database Error: " + e.getMessage()).color(NamedTextColor.RED));
             return null;

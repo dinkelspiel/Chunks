@@ -103,7 +103,7 @@ public final class Chunks extends JavaPlugin {
         Bukkit.getConsoleSender().sendMessage(text);
         for(Player player : Bukkit.getOnlinePlayers())
         {
-            if(player.hasPermission("keii.chunks.staff.message"))
+            if(player.hasPermission("keii.chunks.staffmessage"))
             {
                 player.sendMessage(text);
             }

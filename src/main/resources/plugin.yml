@@ -1,5 +1,5 @@
 name: Chunks
-version: '${project.version}'
+version: 0.2
 main: dev.keii.chunks.Chunks
 api-version: '1.20'
 
@@ -15,26 +15,19 @@ commands:
   chunkoverride:
     description: Set chunk override
     usage: /chunkoverride [player]?
-    permission: keii.chunks.staff.chunkoverride
+    permission: keii.chunks.chunkoverride
   claimpower:
     description: Set claim power
     usage: /claimpower [set,add,remove] <player> <number>
-    permission: keii.chunks.staff.claimpower
+    permission: keii.chunks.claimpower
 permissions:
   keii.chunks.map:
     description: Permission to see the map
-    children:
-      test.foo: true
-      test.bar: false
-  keii.chunks.staff.*:
-    description: Permission to see the map
-    children:
-      keii.chunks.staff.message: true
-      keii.chunks.staff.save: true
-      keii.chunks.staff.load: true
-  keii.chunks.staff.message:
+  keii.chunks.staffmessage:
     description: Get sent staff messages
-  keii.chunks.staff.claimpower:
+  keii.chunks.claimpower:
     description: Modify claim power for a user
-  keii.chunks.staff.chunkoverride:
+  keii.chunks.chunkoverride:
     description: Override chunk permissions
+  keii.chunks.reload:
+    description: Reload chunks config

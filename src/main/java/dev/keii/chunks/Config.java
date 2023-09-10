@@ -7,23 +7,18 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 
 public class Config {
-    public boolean Claims;
-    public boolean Invite;
-
-    public String ApiUrl;
-
-    public String DbUrl;
-    public String DbName;
-    public String DbUser;
-    public String DbPassword;
+    public String dbUrl;
+    public String dbName;
+    public String dbUser;
+    public String dbPassword;
 
 
     public void fileConfigToConfig(FileConfiguration config)
     {
-        DbUrl = config.getString("dbUrl");
-        DbName = config.getString("dbName");
-        DbUser = config.getString("dbUser");
-        DbPassword = config.getString("dbPassword");
+        dbUrl = config.getString("dbUrl");
+        dbName = config.getString("dbName");
+        dbUser = config.getString("dbUser");
+        dbPassword = config.getString("dbPassword");
     }
 
     public void loadConfig() {
@@ -57,10 +52,5 @@ public class Config {
         }
 
         fileConfigToConfig(config);
-
-        Database.DB_URL = DbUrl;
-        Database.DB_NAME = DbName;
-        Database.DB_USER = DbUser;
-        Database.DB_PASSWORD = DbPassword;
     }
 }
