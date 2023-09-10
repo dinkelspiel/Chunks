@@ -1,6 +1,7 @@
 package dev.keii.chunks.models;
 
 import dev.keii.chunks.Chunks;
+import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;
 import java.sql.*;
@@ -35,6 +36,19 @@ public class User {
     }
 
     @Nullable
+    public static User fromNickname(String nickname)
+    {
+        for(User user : Chunks.users)
+        {
+            if(user.getNickname().equals(nickname))
+            {
+                return user;
+            }
+        }
+        return null;
+    }
+
+    @Nullable
     public static User fromUuid(String uuid)
     {
         for(User user : Chunks.users)
@@ -45,6 +59,40 @@ public class User {
             }
         }
         return null;
+    }
+
+    @Nullable
+    public static User fromPlayer(Player player)
+    {
+        for(User user : Chunks.users)
+        {
+            if(user.getUuid().toString().equals(player.getUniqueId().toString()))
+            {
+                return user;
+            }
+        }
+        return null;
+    }
+
+    public Claim[] getClaims()
+    {
+        Claim[] claims = new Claim[getClaimPower()];
+        for(Claim claim : Chunks.claims)
+        {
+            if(claim.getUserID() == getId())
+            {
+                for(var i = 0; i < claims.length; i++)
+                {
+                    if(claims[i] == null)
+                    {
+                        claims[i] = claim;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return claims;
     }
 
     public int getId() {

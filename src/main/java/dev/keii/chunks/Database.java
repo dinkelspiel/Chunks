@@ -5,6 +5,7 @@ import dev.keii.chunks.models.ClaimPermission;
 import dev.keii.chunks.models.User;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 
 import java.io.File;
 import java.sql.*;
@@ -114,6 +115,11 @@ public class Database {
                         timestamp,
                         claim_power
                 ));
+
+                if(id > Chunks.usersAutoIncrement)
+                {
+                    Chunks.usersAutoIncrement = id + 1;
+                }
             }
             users.close();
 
@@ -135,11 +141,16 @@ public class Database {
                         userId,
                         chunkX,
                         chunkZ,
-                        world,
+                        Bukkit.getWorld(world),
                         createdAt,
                         updatedAt,
                         allowExplosions
                 ));
+
+                if(id > Chunks.claimsAutoIncrement)
+                {
+                    Chunks.claimsAutoIncrement = id + 1;
+                }
             }
             claims.close();
 
@@ -148,7 +159,11 @@ public class Database {
             while(claimPermissions.next())
             {
                 int id = claimPermissions.getInt("id");
-                int userId = claimPermissions.getInt("user_id");
+                Integer userId = claimPermissions.getInt("user_id");
+                if(userId == 0)
+                {
+                    userId = null;
+                }
                 int claimId = claimPermissions.getInt("claim_id");
                 boolean blockBreak = claimPermissions.getBoolean("block_break");
                 boolean blockPlace = claimPermissions.getBoolean("block_place");
@@ -170,6 +185,11 @@ public class Database {
                         createdAt,
                         updatedAt
                 ));
+
+                if(id > Chunks.claimPermissionsAutoIncrement)
+                {
+                    Chunks.claimPermissionsAutoIncrement = id + 1;
+                }
             }
             claimPermissions.close();
 
@@ -222,7 +242,7 @@ public class Database {
                 createClaim.setInt(2, claim.getUserID());
                 createClaim.setInt(3, claim.getChunkX());
                 createClaim.setInt(4, claim.getChunkZ());
-                createClaim.setString(5, claim.getWorld());
+                createClaim.setString(5, claim.getWorld().getName());
                 createClaim.setTimestamp(6, claim.getCreatedAt());
                 createClaim.setTimestamp(7, claim.getUpdatedAt());
                 createClaim.setBoolean(8, claim.getAllowExplosions());

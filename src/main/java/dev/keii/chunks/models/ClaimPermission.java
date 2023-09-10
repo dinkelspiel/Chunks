@@ -1,10 +1,15 @@
 package dev.keii.chunks.models;
 
+import dev.keii.chunks.Chunks;
+
+import javax.annotation.Nullable;
 import java.sql.Timestamp;
 
 public class ClaimPermission {
     private int id;
-    private int userId;
+
+    @Nullable
+    private Integer userId;
     private int claimId;
     private boolean blockBreak;
     private boolean blockPlace;
@@ -15,7 +20,7 @@ public class ClaimPermission {
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
-    public ClaimPermission(int id, int userId, int claimId, boolean blockBreak, boolean blockPlace, boolean bucketEmpty, boolean bucketFill, boolean interact, Timestamp createdAt, Timestamp updatedAt) {
+    public ClaimPermission(int id, Integer userId, int claimId, boolean blockBreak, boolean blockPlace, boolean bucketEmpty, boolean bucketFill, boolean interact, Timestamp createdAt, Timestamp updatedAt) {
         this.id = id;
         this.userId = userId;
         this.claimId = claimId;
@@ -28,6 +33,26 @@ public class ClaimPermission {
         this.updatedAt = updatedAt;
     }
 
+    @Nullable
+    public static ClaimPermission get(@Nullable User user, Claim claim)
+    {
+        for(ClaimPermission claimPermission : Chunks.claimPermissions)
+        {
+            if(user == null) {
+                if (claim.getId() == claimPermission.getClaimId() && claimPermission.getUserId() == null)
+                {
+                    return claimPermission;
+                }
+            } else {
+                if(claim.getId() == claimPermission.getClaimId() && user.getId() == claimPermission.getUserId())
+                {
+                    return claimPermission;
+                }
+            }
+        }
+        return null;
+    }
+
     public int getId() {
         return id;
     }
@@ -36,11 +61,11 @@ public class ClaimPermission {
         this.id = id;
     }
 
-    public int getUserId() {
+    public Integer getUserId() {
         return userId;
     }
 
-    public void setUserId(int userId) {
+    public void setUserId(Integer userId) {
         this.userId = userId;
     }
 

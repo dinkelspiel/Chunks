@@ -1,11 +1,11 @@
 package dev.keii.chunks.events;
 
-import dev.keii.chunks.PlayerChunk;
-import dev.keii.chunks.saveload.User;
+import dev.keii.chunks.models.Claim;
 import dev.keii.chunks.inventories.InventoryChunkPermission;
 import dev.keii.chunks.inventories.InventoryMap;
 import dev.keii.chunks.inventories.InventoryModifyChunk;
 import dev.keii.chunks.inventories.InventoryModifyChunkPermission;
+import dev.keii.chunks.models.User;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -56,20 +56,25 @@ public class InventoryClick implements Listener {
 
             if(chunkX != null)
             {
-                String owner = PlayerChunk.getChunkOwnerUUID(event.getWhoClicked().getWorld().getChunkAt(chunkX, chunkZ));
-                if(owner != null) {
-                    if(owner.equals(player.getUniqueId().toString())) {
-                        player.closeInventory();
-                        InventoryModifyChunk mc = new InventoryModifyChunk();
-                        InventoryClick.modifyChunk.remove(player.getUniqueId().toString());
-                        InventoryClick.modifyChunk.put(player.getUniqueId().toString(), new Vector2i(chunkX, chunkZ));
-                        player.openInventory(mc.getInventory());
+                Claim claim = Claim.fromChunk(event.getWhoClicked().getWorld().getChunkAt(chunkX, chunkZ));
+
+                if(claim != null) {
+                    if (claim.getOwner() != null) {
+                        if (claim.getOwner().getUuid().toString().equals(player.getUniqueId().toString())) {
+                            player.closeInventory();
+                            InventoryModifyChunk mc = new InventoryModifyChunk();
+                            InventoryClick.modifyChunk.remove(player.getUniqueId().toString());
+                            InventoryClick.modifyChunk.put(player.getUniqueId().toString(), new Vector2i(chunkX, chunkZ));
+                            player.openInventory(mc.getInventory());
+                        }
+                        return;
                     }
-                    return;
                 }
 
-                if(PlayerChunk.claimChunk(player, event.getWhoClicked().getWorld().getChunkAt(chunkX, chunkZ))) {
-                    PlayerChunk.addChunkPermissionsForUser(player, null, event.getWhoClicked().getWorld().getChunkAt(chunkX, chunkZ));
+                if(Claim.claim(player, event.getWhoClicked().getWorld().getChunkAt(chunkX, chunkZ))) {
+                    claim = Claim.fromChunk(event.getWhoClicked().getWorld().getChunkAt(chunkX, chunkZ));
+                    assert claim != null;
+                    claim.addChunkPermissionsForUser(player, null);
                     player.sendMessage(Component.text("Claimed Chunk").color(NamedTextColor.YELLOW));
                 } else {
                     player.sendMessage(Component.text("Failed to claim chunk").color(NamedTextColor.RED));
@@ -94,11 +99,13 @@ public class InventoryClick implements Listener {
 
             Player player = (Player) event.getWhoClicked();
 
-            Chunk chunk = event.getWhoClicked().getWorld().getChunkAt(modifyChunk.get(player.getUniqueId().toString()).x, modifyChunk.get(player.getUniqueId().toString()).y);
+            Claim claim = Claim.fromChunk(event.getWhoClicked().getWorld().getChunkAt(modifyChunk.get(player.getUniqueId().toString()).x, modifyChunk.get(player.getUniqueId().toString()).y));
+
+            assert claim != null;
 
             if(slot > 5)
             {
-                if(PlayerChunk.unClaimChunk(player, chunk)) {
+                if(claim.unClaim(player)) {
                     player.sendMessage(Component.text("Unclaimed chunk").color(NamedTextColor.YELLOW));
                     player.closeInventory();
 
@@ -109,13 +116,13 @@ public class InventoryClick implements Listener {
                 }
             } else if(slot > 2)
             {
-                if(!PlayerChunk.toggleExplosionPolicy(player, chunk))
+                if(!claim.toggleExplosionPolicy(player))
                 {
                     player.sendMessage(Component.text("Failed to toggle explosions for chunk").color(NamedTextColor.RED));
                     return;
                 }
 
-                if(PlayerChunk.getExplosionPolicy(chunk))
+                if(claim.getAllowExplosions())
                 {
                     player.sendMessage(Component.text("Enabled explosions in chunk").color(NamedTextColor.YELLOW));
                 } else
@@ -126,7 +133,7 @@ public class InventoryClick implements Listener {
 
             } else {
                 player.closeInventory();
-                InventoryChunkPermission cp = new InventoryChunkPermission(chunk);
+                InventoryChunkPermission cp = new InventoryChunkPermission(claim.getChunk());
                 player.openInventory(cp.getInventory());
             }
 
@@ -165,7 +172,7 @@ public class InventoryClick implements Listener {
                 modifyChunkPermissionUser.put(player.getUniqueId().toString(), Integer.parseInt(userid.trim()));
 
                 player.closeInventory();
-                InventoryModifyChunkPermission mcp = new InventoryModifyChunkPermission(User.getUUIDFromID(Integer.parseInt(userid.trim())), chunk);
+                InventoryModifyChunkPermission mcp = new InventoryModifyChunkPermission(User.fromId(Integer.parseInt(userid.trim())).getUuid().toString(), chunk);
                 player.openInventory(mcp.getInventory());
             } else {
                 PlayerChat.chunkListener.put(player.getUniqueId().toString(), new ChunkPermissionAddPlayer(chunk));
@@ -177,55 +184,52 @@ public class InventoryClick implements Listener {
             event.setCancelled(true);
 
             Player player = (Player) event.getWhoClicked();
-            Chunk chunk = event.getWhoClicked().getWorld().getChunkAt(modifyChunk.get(player.getUniqueId().toString()).x, modifyChunk.get(player.getUniqueId().toString()).y);
+            Claim claim = Claim.fromChunk(event.getWhoClicked().getWorld().getChunkAt(modifyChunk.get(player.getUniqueId().toString()).x, modifyChunk.get(player.getUniqueId().toString()).y));
 
             if(event.getCurrentItem() == null)
             {
                 return;
             }
 
+            if(claim == null)
+            {
+                return;
+            }
+
             String displayName = event.getCurrentItem().displayName().toString();
 
-            if(modifyChunkPermissionUser.get(player.getUniqueId().toString()) != null) {
-                if (displayName.contains("Interact")) {
-                    PlayerChunk.setClaimPermission(player, chunk, User.getUUIDFromID(modifyChunkPermissionUser.get(player.getUniqueId().toString())), PlayerChunk.ChunkPermission.Interact, displayName.contains("Enable"));
-                } else if (displayName.contains("Block Break")) {
-                    PlayerChunk.setClaimPermission(player, chunk, User.getUUIDFromID(modifyChunkPermissionUser.get(player.getUniqueId().toString())), PlayerChunk.ChunkPermission.BlockBreak, displayName.contains("Enable"));
-                } else if (displayName.contains("Block Place")) {
-                    PlayerChunk.setClaimPermission(player, chunk, User.getUUIDFromID(modifyChunkPermissionUser.get(player.getUniqueId().toString())), PlayerChunk.ChunkPermission.BlockPlace, displayName.contains("Enable"));
-                } else if (displayName.contains("Bucket Empty")) {
-                    PlayerChunk.setClaimPermission(player, chunk, User.getUUIDFromID(modifyChunkPermissionUser.get(player.getUniqueId().toString())), PlayerChunk.ChunkPermission.BucketEmpty, displayName.contains("Enable"));
-                } else if (displayName.contains("Bucket Fill")) {
-                    PlayerChunk.setClaimPermission(player, chunk, User.getUUIDFromID(modifyChunkPermissionUser.get(player.getUniqueId().toString())), PlayerChunk.ChunkPermission.BucketFill, displayName.contains("Enable"));
-                }
-            } else {
-                if (displayName.contains("Interact")) {
-                    PlayerChunk.setClaimPermission(player, chunk, null, PlayerChunk.ChunkPermission.Interact, displayName.contains("Enable"));
-                } else if (displayName.contains("Block Break")) {
-                    PlayerChunk.setClaimPermission(player, chunk, null, PlayerChunk.ChunkPermission.BlockBreak, displayName.contains("Enable"));
-                } else if (displayName.contains("Block Place")) {
-                    PlayerChunk.setClaimPermission(player, chunk, null, PlayerChunk.ChunkPermission.BlockPlace, displayName.contains("Enable"));
-                } else if (displayName.contains("Bucket Empty")) {
-                    PlayerChunk.setClaimPermission(player, chunk, null, PlayerChunk.ChunkPermission.BucketEmpty, displayName.contains("Enable"));
-                } else if (displayName.contains("Bucket Fill")) {
-                    PlayerChunk.setClaimPermission(player, chunk, null, PlayerChunk.ChunkPermission.BucketFill, displayName.contains("Enable"));
-                }
+            User user = User.fromId(modifyChunkPermissionUser.get(player.getUniqueId().toString()));
+            if(modifyChunkPermissionUser.get(player.getUniqueId().toString()) == null)
+            {
+                user = null;
+            }
+
+            if (displayName.contains("Interact")) {
+                claim.setPermission(player, user, Claim.ChunkPermission.Interact, displayName.contains("Enable"));
+            } else if (displayName.contains("Block Break")) {
+                claim.setPermission(player, user, Claim.ChunkPermission.BlockBreak, displayName.contains("Enable"));
+            } else if (displayName.contains("Block Place")) {
+                claim.setPermission(player, user, Claim.ChunkPermission.BlockPlace, displayName.contains("Enable"));
+            } else if (displayName.contains("Bucket Empty")) {
+                claim.setPermission(player, user, Claim.ChunkPermission.BucketEmpty, displayName.contains("Enable"));
+            } else if (displayName.contains("Bucket Fill")) {
+                claim.setPermission(player, user, Claim.ChunkPermission.BucketFill, displayName.contains("Enable"));
             }
 
             if(displayName.contains("Back"))
             {
                 player.closeInventory();
-                InventoryChunkPermission cp = new InventoryChunkPermission(chunk);
+                InventoryChunkPermission cp = new InventoryChunkPermission(claim.getChunk());
                 player.openInventory(cp.getInventory());
                 return;
             }
 
             player.closeInventory();
             if(modifyChunkPermissionUser.get(player.getUniqueId().toString()) != null) {
-                InventoryModifyChunkPermission mcp = new InventoryModifyChunkPermission(User.getUUIDFromID(modifyChunkPermissionUser.get(player.getUniqueId().toString())), chunk);
+                InventoryModifyChunkPermission mcp = new InventoryModifyChunkPermission(User.fromId(modifyChunkPermissionUser.get(player.getUniqueId().toString())).getUuid().toString(), claim.getChunk());
                 player.openInventory(mcp.getInventory());
             } else {
-                InventoryModifyChunkPermission mcp = new InventoryModifyChunkPermission(null, chunk);
+                InventoryModifyChunkPermission mcp = new InventoryModifyChunkPermission(null, claim.getChunk());
                 player.openInventory(mcp.getInventory());
             }
         }

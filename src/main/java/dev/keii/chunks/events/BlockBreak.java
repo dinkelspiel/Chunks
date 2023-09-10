@@ -1,8 +1,10 @@
 package dev.keii.chunks.events;
 
 import dev.keii.chunks.Database;
-import dev.keii.chunks.PlayerChunk;
 import dev.keii.chunks.commands.ChunkOverride;
+import dev.keii.chunks.models.Claim;
+import dev.keii.chunks.models.ClaimPermission;
+import dev.keii.chunks.models.User;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -17,85 +19,41 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import static dev.keii.chunks.PlayerChunk.getChunkPermissionString;
-
 public class BlockBreak implements Listener {
-
-    public static boolean getPlayerPermissionForChunk(Player player, Chunk chunk, PlayerChunk.ChunkPermission perm)
-    {
-        boolean canBreak = true;
-
-        try {
-            Connection connection = Database.getConnection();
-            Statement statement = connection.createStatement();
-
-            ResultSet claimResultSet = statement.executeQuery("SELECT * FROM claim WHERE chunk_x = " + chunk.getX() + " AND chunk_z = " + chunk.getZ() + " AND world = '" + chunk.getWorld().getName() + "'");
-
-            if(!claimResultSet.next()) // Claim doesn't exist
-            {
-                claimResultSet.close();
-                statement.close();
-                connection.close();
-                return true;
-            }
-
-            long claimId = claimResultSet.getLong("id");
-            long claimOwnerId = claimResultSet.getLong("user_id");
-            claimResultSet.close();
-
-            ResultSet claimPermissionResultSet = statement.executeQuery("SELECT * FROM claim_permission WHERE user_id IS NULL AND claim_id = " + claimId);
-
-            if(claimPermissionResultSet.next())
-            {
-                canBreak = claimPermissionResultSet.getBoolean(getChunkPermissionString(perm));
-            }
-
-            claimPermissionResultSet.close();
-
-            ResultSet userResultSet = statement.executeQuery( "SELECT id FROM user WHERE uuid = \"" + player.getUniqueId().toString() + "\"");
-
-            if(userResultSet.next()) {
-                if(userResultSet.getLong("id") == claimOwnerId)
-                {
-                    canBreak = true;
-                } else {
-                    ResultSet claimPermissionUserResultSet = statement.executeQuery("SELECT * FROM claim_permission WHERE user_id = " + userResultSet.getLong("id") + " AND claim_id = " + claimId);
-
-                    if (claimPermissionUserResultSet.next()) {
-                        canBreak = claimPermissionUserResultSet.getBoolean(getChunkPermissionString(perm));
-                    }
-
-                    claimPermissionUserResultSet.close();
-                }
-            }
-
-            userResultSet.close();
-
-            statement.close();
-            connection.close();
-        } catch (SQLException e) {
-            Bukkit.getServer().broadcast(Component.text("Fatal Database Error: " + e.getMessage()).color(NamedTextColor.RED));
-        }
-
-        return canBreak;
-    }
-
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event)
     {
         Player player = event.getPlayer();
         Chunk chunk = event.getBlock().getChunk();
 
-        if(ChunkOverride.getChunkOverrideForPlayer(player))
+        Claim claim = Claim.fromChunk(chunk);
+
+        if(ChunkOverride.getChunkOverrideForPlayer(player) || claim == null)
         {
             event.setCancelled(false);
             return;
         }
 
-        boolean canBreak = getPlayerPermissionForChunk(player, chunk, PlayerChunk.ChunkPermission.BlockBreak);
+        User user = User.fromUuid(player.getUniqueId().toString());
 
-        event.setCancelled(!canBreak);
-        if(!canBreak)
+        if(user == null)
+        {
+            event.setCancelled(false);
+            return;
+        }
+
+        ClaimPermission claimPermission = claim.getPermissionsForUser(user);
+
+        if(claimPermission == null)
+        {
+            event.setCancelled(false);
+            return;
+        }
+
+        boolean hasPermission = claimPermission.getBlockBreak();
+
+        event.setCancelled(!hasPermission);
+        if(!hasPermission)
         {
             player.sendActionBar(Component.text("You do not have the rights to break blocks in this chunk!").color(NamedTextColor.RED));
         }

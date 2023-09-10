@@ -30,6 +30,11 @@ public final class Chunks extends JavaPlugin {
     public static List<Claim> claims = new ArrayList<>();
     public static List<ClaimPermission> claimPermissions = new ArrayList<>();
 
+    public static int usersAutoIncrement = 0;
+    public static int claimsAutoIncrement = 0;
+    public static int claimPermissionsAutoIncrement = 0;
+
+
     @Override
     public void onEnable() {
         instance = this;
@@ -45,6 +50,7 @@ public final class Chunks extends JavaPlugin {
         }
 
         Database.initializeDatabase();
+        Database.loadFromDatabase();
 
         registerEvents();
         registerCommands();

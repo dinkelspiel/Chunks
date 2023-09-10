@@ -1,6 +1,7 @@
 package dev.keii.chunks.inventories;
 
-import dev.keii.chunks.PlayerChunk;
+import dev.keii.chunks.models.Claim;
+import dev.keii.chunks.models.ClaimPermission;
 import dev.keii.chunks.models.User;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -14,6 +15,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+import java.util.HashMap;
 import java.util.Map;
 
 public class InventoryModifyChunkPermission implements InventoryHolder {
@@ -33,32 +35,45 @@ public class InventoryModifyChunkPermission implements InventoryHolder {
     @Override
     public @NotNull Inventory getInventory()
     {
-        Inventory inventory = Bukkit.createInventory(this, 27, Name.append(Component.text((uuid != null ? User.getNicknameFromUUID(uuid) : "Everyone") + "'s permissions").color(NamedTextColor.DARK_GRAY)));
+        Inventory inventory = Bukkit.createInventory(this, 27, Name.append(Component.text((uuid != null ? User.fromUuid(uuid).getNickname() : "Everyone") + "'s permissions").color(NamedTextColor.DARK_GRAY)));
 
         if(uuid != null) {
             Bukkit.getConsoleSender().sendMessage(Component.text(uuid));
         }
-        Map<PlayerChunk.ChunkPermission, Boolean> perm = PlayerChunk.getChunkPermissionsForUser(uuid, chunk);
 
-        if(perm != null) {
-            for (var permission : perm.entrySet()) {
-                String permissionString = "";
+        Claim claim = Claim.fromChunk(chunk);
+
+        if(claim == null)
+        {
+            return inventory;
+        }
+
+        ClaimPermission claimPermission = claim.getPermissionsForUser(User.fromUuid(uuid));
+
+        HashMap<Claim.ChunkPermission, Boolean> permissionHashmap = new HashMap<>();
+        permissionHashmap.put(Claim.ChunkPermission.Interact, claimPermission.getInteract());
+        permissionHashmap.put(Claim.ChunkPermission.BlockBreak, claimPermission.getBlockBreak());
+        permissionHashmap.put(Claim.ChunkPermission.BlockPlace, claimPermission.getBlockPlace());
+        permissionHashmap.put(Claim.ChunkPermission.BucketEmpty, claimPermission.getBucketEmpty());
+        permissionHashmap.put(Claim.ChunkPermission.BucketFill, claimPermission.getBucketFill());
+
+        for (var permission : permissionHashmap.entrySet()) {
+            String permissionString = "";
 //                Bukkit.getServer().broadcastMessage(permission.getKey().toString());
-                switch (permission.getKey()) {
-                    case Interact -> permissionString = "Interact";
-                    case BlockBreak -> permissionString = "Block Break";
-                    case BlockPlace -> permissionString = "Block Place";
-                    case BucketFill -> permissionString = "Bucket Fill";
-                    case BucketEmpty -> permissionString = "Bucket Empty";
-                }
-
-                ItemStack item = new ItemStack(Material.STICK);
-                ItemMeta meta = item.getItemMeta();
-                meta.setCustomModelData(permission.getValue() ? 1003 : 1004);
-                meta.displayName(Component.text((permission.getValue() ? "Disable " : "Enable ") + permissionString).color(NamedTextColor.YELLOW));
-                item.setItemMeta(meta);
-                inventory.addItem(item);
+            switch (permission.getKey()) {
+                case Interact -> permissionString = "Interact";
+                case BlockBreak -> permissionString = "Block Break";
+                case BlockPlace -> permissionString = "Block Place";
+                case BucketFill -> permissionString = "Bucket Fill";
+                case BucketEmpty -> permissionString = "Bucket Empty";
             }
+
+            ItemStack item = new ItemStack(Material.STICK);
+            ItemMeta meta = item.getItemMeta();
+            meta.setCustomModelData(permission.getValue() ? 1003 : 1004);
+            meta.displayName(Component.text((permission.getValue() ? "Disable " : "Enable ") + permissionString).color(NamedTextColor.YELLOW));
+            item.setItemMeta(meta);
+            inventory.addItem(item);
         }
 
         // 18 26

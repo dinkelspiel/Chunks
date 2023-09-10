@@ -1,7 +1,8 @@
 package dev.keii.chunks.inventories;
 
 import dev.keii.chunks.Database;
-import dev.keii.chunks.PlayerChunk;
+import dev.keii.chunks.models.Claim;
+import dev.keii.chunks.models.User;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.*;
@@ -320,12 +321,21 @@ public class InventoryMap implements InventoryHolder {
         representation += getLetterOfBiome(chunk.getBlock(12, 62, 3));
         representation += getLetterOfBiome(chunk.getBlock(3, 62, 3));
 
-        if(PlayerChunk.getPlayerOwnsChunk(player, chunk))
-        {
-            representation += "o";
-        } else if(PlayerChunk.getChunkOwner(chunk) == null)
+        Claim claim = Claim.fromChunk(chunk);
+
+        User user = User.fromPlayer(player);
+
+        if(claim == null)
         {
             representation += "n";
+            return representation;
+        }
+
+        assert user != null;
+
+        if(claim.getOwner().getId() == user.getId())
+        {
+            representation += "o";
         } else {
             representation += "e";
         }
@@ -443,13 +453,19 @@ public class InventoryMap implements InventoryHolder {
             lore.add(Component.text("ChunkX: " + chunkX + ", ChunkZ: " + chunkY));
             lore.add(Component.text("WorldX: " + chunkWorldX + ", WorldZ: " + chunkWorldY));
 
-            switch (stringRepresentation.charAt(stringRepresentation.length() - 1)) {
-                case 'n' -> mapItemMeta.displayName(Component.text("Click to claim!").color(NamedTextColor.YELLOW));
-                case 'o' -> {
-                    mapItemMeta.displayName(Component.text("You own this chunk").color(NamedTextColor.AQUA));
-                    lore.add(0, Component.text("Click to modify").color(NamedTextColor.YELLOW));
+            Claim claim = Claim.fromChunk(chunk);
+
+            if(claim != null) {
+                switch (stringRepresentation.charAt(stringRepresentation.length() - 1)) {
+                    case 'n' -> mapItemMeta.displayName(Component.text("Click to claim!").color(NamedTextColor.YELLOW));
+                    case 'o' -> {
+                        mapItemMeta.displayName(Component.text("You own this chunk").color(NamedTextColor.AQUA));
+                        lore.add(0, Component.text("Click to modify").color(NamedTextColor.YELLOW));
+                    }
+                    case 'e' -> mapItemMeta.displayName(Component.text(claim.getOwner().getNickname() + "'s chunk").color(NamedTextColor.RED));
                 }
-                case 'e' -> mapItemMeta.displayName(Component.text(PlayerChunk.getChunkOwner(chunk) + "'s chunk").color(NamedTextColor.RED));
+            } else {
+                mapItemMeta.displayName(Component.text("Click to claim!").color(NamedTextColor.YELLOW));
             }
 
             if(i == 31)
