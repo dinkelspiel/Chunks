@@ -1,26 +1,26 @@
-package dev.keii.chunks.saveload;
+package dev.keii.chunks.database;
 
 import dev.keii.chunks.Database;
 
 import javax.annotation.Nullable;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.util.UUID;
 
 public class User {
-    public long id;
-    public String uuid;
-    public String timestamp;
-    public int claimPower;
+    private int id;
+    private String nickname;
+    private UUID uuid;
+    private Timestamp timestamp;
+    private int claimPower;
 
-    public User(long id, String uuid, String timestamp, int claimPower)
-    {
+    public User(int id, String nickname, UUID uuid, Timestamp timestamp, int claimPower) {
         this.id = id;
+        this.nickname = nickname;
         this.uuid = uuid;
         this.timestamp = timestamp;
         this.claimPower = claimPower;
     }
+
 
     @Nullable
     public static String getUUIDFromID(int id)
@@ -110,5 +110,45 @@ public class User {
         }
 
         return null;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public UUID getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(UUID uuid) {
+        this.uuid = uuid;
+    }
+
+    public Timestamp getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Timestamp timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public int getClaimPower() {
+        return claimPower;
+    }
+
+    public void setClaimPower(int claimPower) {
+        this.claimPower = claimPower;
     }
 }

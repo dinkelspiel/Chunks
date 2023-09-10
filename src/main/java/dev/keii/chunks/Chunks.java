@@ -4,6 +4,7 @@ import dev.keii.barter.commands.CommandChunks;
 import dev.keii.chunks.commands.ChunkOverride;
 import dev.keii.chunks.commands.ClaimPower;
 import dev.keii.chunks.commands.CommandMap;
+import dev.keii.chunks.database.User;
 import dev.keii.chunks.events.*;
 import dev.keii.chunks.saveload.Claim;
 import dev.keii.chunks.saveload.ClaimPermission;
@@ -24,15 +25,18 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 
 public final class Chunks extends JavaPlugin {
 
     private static Chunks instance;
-
     public static Config config;
+
+    public static List<User> users = new ArrayList<>();
 
     @Override
     public void onEnable() {

@@ -1,8 +1,8 @@
-package dev.keii.chunks.api;
+package dev.keii.chunks.database;
 
 import java.sql.Timestamp;
 
-public class ApiChunk {
+public class Claim {
     private long id;
     private long userID;
     private int chunkX;
@@ -12,7 +12,7 @@ public class ApiChunk {
     private Timestamp updatedAt;
     private boolean allowExplosions;
 
-    public ApiChunk(long id, long userID, int chunkX, int chunkZ, String world, Timestamp createdAt, Timestamp updatedAt, boolean allowExplosions) {
+    public Claim(long id, long userID, int chunkX, int chunkZ, String world, Timestamp createdAt, Timestamp updatedAt, boolean allowExplosions) {
         this.id = id;
         this.userID = userID;
         this.chunkZ = chunkZ;

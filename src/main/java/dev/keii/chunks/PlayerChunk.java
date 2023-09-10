@@ -1,10 +1,9 @@
 package dev.keii.chunks;
 
-import dev.keii.chunks.api.ApiChunk;
+import dev.keii.chunks.database.Claim;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
@@ -17,9 +16,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PlayerChunk {
-    static Map<Long, ApiChunk> claimCache = new HashMap<>();
+    static Map<Long, Claim> claimCache = new HashMap<>();
 
-    public static boolean getPlayerOwnsChunk(Player player, Chunk chunk) {
+    public static boolean getPlayerOwnsChunk(Player player, org.bukkit.Chunk chunk) {
         try {
             Connection connection = Database.getConnection();
             Statement statement = connection.createStatement();
@@ -66,7 +65,7 @@ public class PlayerChunk {
         return false;
     }
 
-    public static boolean getPlayerCanModifyChunk(Player player, Chunk chunk) {
+    public static boolean getPlayerCanModifyChunk(Player player, org.bukkit.Chunk chunk) {
         try {
             Connection connection = Database.getConnection();
             Statement statement = connection.createStatement();
@@ -115,7 +114,7 @@ public class PlayerChunk {
     }
 
     @Nullable
-    public static String getChunkOwner(Chunk chunk) {
+    public static String getChunkOwner(org.bukkit.Chunk chunk) {
         try {
             Connection connection = Database.getConnection();
             Statement statement = connection.createStatement();
@@ -144,7 +143,7 @@ public class PlayerChunk {
     }
 
     @Nullable
-    public static String getChunkOwnerUUID(Chunk chunk) {
+    public static String getChunkOwnerUUID(org.bukkit.Chunk chunk) {
         try {
             Connection connection = Database.getConnection();
             Statement statement = connection.createStatement();
@@ -172,7 +171,7 @@ public class PlayerChunk {
         return null;
     }
 
-    public static boolean claimChunk(Player player, Chunk chunk) {
+    public static boolean claimChunk(Player player, org.bukkit.Chunk chunk) {
         if (getChunkOwner(chunk) != null) {
             return false;
         }
@@ -250,7 +249,7 @@ public class PlayerChunk {
         return false;
     }
 
-    public static boolean unClaimChunk(Player player, Chunk chunk) {
+    public static boolean unClaimChunk(Player player, org.bukkit.Chunk chunk) {
         try {
             Connection connection = Database.getConnection();
             Statement statement = connection.createStatement();
@@ -304,7 +303,7 @@ public class PlayerChunk {
         return false;
     }
 
-    private static void showChunkPerimeter(Player player, Chunk chunk) {
+    private static void showChunkPerimeter(Player player, org.bukkit.Chunk chunk) {
         int worldX = chunk.getX() * 16;
         int worldZ = chunk.getZ() * 16;
 
@@ -373,7 +372,7 @@ public class PlayerChunk {
         player.sendMultiBlockChange(blockChanges);
     }
 
-    public static boolean toggleExplosionPolicy(Player player, Chunk chunk) {
+    public static boolean toggleExplosionPolicy(Player player, org.bukkit.Chunk chunk) {
         try {
             Connection connection = Database.getConnection();
             Statement statement = connection.createStatement();
@@ -422,13 +421,13 @@ public class PlayerChunk {
             String query = "UPDATE claim SET allow_explosions = " + newExp + ", updated_at = current_timestamp() WHERE user_id = " + userId + " AND chunk_x = " + chunk.getX() + " AND chunk_z = " + chunk.getZ() + " AND world = '" + chunk.getWorld().getName() + "'";
             statement.execute(query);
 
-            ApiChunk c = claimCache.get(chunk.getChunkKey());
+            Claim c = claimCache.get(chunk.getChunkKey());
             if (c != null) {
                 c.setAllowExplosions(newExp == 1);
                 claimCache.remove(chunk.getChunkKey());
                 claimCache.put(chunk.getChunkKey(), c);
             } else {
-                claimCache.put(chunk.getChunkKey(), new ApiChunk(
+                claimCache.put(chunk.getChunkKey(), new Claim(
                         id,
                         user_id,
                         chunk_x,
@@ -452,8 +451,8 @@ public class PlayerChunk {
         return false;
     }
 
-    public static boolean getExplosionPolicy(Chunk chunk) {
-        ApiChunk cache = claimCache.get(chunk.getChunkKey());
+    public static boolean getExplosionPolicy(org.bukkit.Chunk chunk) {
+        Claim cache = claimCache.get(chunk.getChunkKey());
         if (cache != null) {
             return cache.isAllowExplosions();
         }
@@ -474,7 +473,7 @@ public class PlayerChunk {
 
             boolean allow = resultSet.getBoolean("allow_explosions");
 
-            claimCache.put(chunk.getChunkKey(), new ApiChunk(
+            claimCache.put(chunk.getChunkKey(), new Claim(
                     resultSet.getLong("id"),
                     resultSet.getLong("user_id"),
                     resultSet.getInt("chunk_x"),
@@ -526,7 +525,7 @@ public class PlayerChunk {
         return "";
     }
 
-    public static boolean setClaimPermission(Player player, Chunk chunk, @Nullable String targetPlayerUUID, ChunkPermission permission, boolean value)
+    public static boolean setClaimPermission(Player player, org.bukkit.Chunk chunk, @Nullable String targetPlayerUUID, ChunkPermission permission, boolean value)
     {
         try {
             Connection connection = Database.getConnection();
@@ -629,7 +628,7 @@ public class PlayerChunk {
     }
 
     @Nullable
-    public static Map<ChunkPermission, Boolean> getChunkPermissionsForUser(String uuid, Chunk chunk)
+    public static Map<ChunkPermission, Boolean> getChunkPermissionsForUser(String uuid, org.bukkit.Chunk chunk)
     {
         try {
             Connection connection = Database.getConnection();
@@ -741,7 +740,7 @@ public class PlayerChunk {
         return null;
     }
 
-    public static Result addChunkPermissionsForUser(Player player, @Nullable  String targetNickname, Chunk chunk)
+    public static Result addChunkPermissionsForUser(Player player, @Nullable  String targetNickname, org.bukkit.Chunk chunk)
     {
         try {
             Connection connection = Database.getConnection();

@@ -1,7 +1,7 @@
 package dev.keii.chunks.inventories;
 
 import dev.keii.chunks.PlayerChunk;
-import dev.keii.chunks.saveload.User;
+import dev.keii.chunks.database.User;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
