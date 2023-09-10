@@ -52,7 +52,7 @@ public class ClaimPermission {
         this.claimId = claimId;
     }
 
-    public boolean isBlockBreak() {
+    public boolean getBlockBreak() {
         return blockBreak;
     }
 
@@ -60,7 +60,7 @@ public class ClaimPermission {
         this.blockBreak = blockBreak;
     }
 
-    public boolean isBlockPlace() {
+    public boolean getBlockPlace() {
         return blockPlace;
     }
 
@@ -68,7 +68,7 @@ public class ClaimPermission {
         this.blockPlace = blockPlace;
     }
 
-    public boolean isBucketEmpty() {
+    public boolean getBucketEmpty() {
         return bucketEmpty;
     }
 
@@ -76,7 +76,7 @@ public class ClaimPermission {
         this.bucketEmpty = bucketEmpty;
     }
 
-    public boolean isBucketFill() {
+    public boolean getBucketFill() {
         return bucketFill;
     }
 
@@ -84,7 +84,7 @@ public class ClaimPermission {
         this.bucketFill = bucketFill;
     }
 
-    public boolean isInteract() {
+    public boolean getInteract() {
         return interact;
     }
 

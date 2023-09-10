@@ -4,11 +4,10 @@ import dev.keii.barter.commands.CommandChunks;
 import dev.keii.chunks.commands.ChunkOverride;
 import dev.keii.chunks.commands.ClaimPower;
 import dev.keii.chunks.commands.CommandMap;
+import dev.keii.chunks.database.Claim;
+import dev.keii.chunks.database.ClaimPermission;
 import dev.keii.chunks.database.User;
 import dev.keii.chunks.events.*;
-import dev.keii.chunks.saveload.Claim;
-import dev.keii.chunks.saveload.ClaimPermission;
-import dev.keii.chunks.saveload.User;
 import dev.keii.chunks.tabcomplete.TabCompleteChunks;
 import dev.keii.chunks.tabcomplete.TabCompleteClaimPower;
 import net.kyori.adventure.text.Component;
@@ -17,19 +16,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.joml.Vector2i;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.io.File;
 import java.util.List;
-import java.util.Map;
 
 public final class Chunks extends JavaPlugin {
 
@@ -37,6 +29,8 @@ public final class Chunks extends JavaPlugin {
     public static Config config;
 
     public static List<User> users = new ArrayList<>();
+    public static List<Claim> claims = new ArrayList<>();
+    public static List<ClaimPermission> claimPermissions = new ArrayList<>();
 
     @Override
     public void onEnable() {
@@ -48,22 +42,10 @@ public final class Chunks extends JavaPlugin {
         File pluginDir = new File("./plugins/Chunks");
         if (!pluginDir.exists()){
             if(!pluginDir.mkdirs()) {
-                Bukkit.getServer().sendMessage(Component.text("Creating plugin folders failed").color(NamedTextColor.RED));
+                sendMessageToStaff(Component.text("Creating plugin folders failed").color(NamedTextColor.RED));
             }
         }
-        File sqlFile = new File("./plugins/Chunks/database.sql");
-        try {
-            if (!sqlFile.createNewFile()){
-                Bukkit.getServer().sendMessage(Component.text("Creating sql file failed").color(NamedTextColor.RED));
-            } else {
-                FileWriter myWriter = new FileWriter("./plugins/Chunks/database.sql");
-                myWriter.write(Database.createDatabaseSQL);
-                myWriter.close();
-                Bukkit.getServer().sendMessage(Component.text("Created sql file").color(NamedTextColor.YELLOW));
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+
         Database.initializeDatabase();
 
         registerEvents();
@@ -71,7 +53,6 @@ public final class Chunks extends JavaPlugin {
     }
 
     public void registerEvents() {
-        //This first line is optional, makes it faster with lots of classes
         PluginManager pm = Bukkit.getServer().getPluginManager();
         pm.registerEvents(new PlayerJoin(), this);
         pm.registerEvents(new PlayerQuit(), this);

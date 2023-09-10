@@ -31,7 +31,9 @@ public class CommandChunks implements CommandExecutor {
                         .appendNewline()
                         .append(Component.text("    reload - Reload chunks config").color(NamedTextColor.YELLOW))
                         .appendNewline()
-                        .append(Component.text("Staff:").color(NamedTextColor.YELLOW))
+                        .append(Component.text("    save - Save chunks to disk").color(NamedTextColor.YELLOW))
+                        .appendNewline()
+                        .append(Component.text("    load - Load chunks from disk").color(NamedTextColor.YELLOW))
                         .appendNewline()
                         .append(Component.text("/claimpower [set,add,remove] <player> <amount> - Modify claimpower of user").color(NamedTextColor.GOLD))
                         .appendNewline()
@@ -68,6 +70,22 @@ public class CommandChunks implements CommandExecutor {
                 break;
             case "reload":
                 reload(sender);
+                break;
+            case "save":
+                if(!sender.hasPermission("keii.chunks.save"))
+                {
+                    sender.sendMessage(Responses.noPermissionResponse);
+                    return true;
+                }
+                Database.saveToDatabase();
+                break;
+            case "load":
+                if(!sender.hasPermission("keii.chunks.load"))
+                {
+                    sender.sendMessage(Responses.noPermissionResponse);
+                    return true;
+                }
+                Database.loadFromDatabase();
                 break;
             default:
                 sender.sendMessage(Component.text("Invalid argument '" + args[0] + "'!").appendNewline());

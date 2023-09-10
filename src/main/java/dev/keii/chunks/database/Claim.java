@@ -3,8 +3,8 @@ package dev.keii.chunks.database;
 import java.sql.Timestamp;
 
 public class Claim {
-    private long id;
-    private long userID;
+    private int id;
+    private int userID;
     private int chunkX;
     private int chunkZ;
     private String world;
@@ -12,7 +12,7 @@ public class Claim {
     private Timestamp updatedAt;
     private boolean allowExplosions;
 
-    public Claim(long id, long userID, int chunkX, int chunkZ, String world, Timestamp createdAt, Timestamp updatedAt, boolean allowExplosions) {
+    public Claim(int id, int userID, int chunkX, int chunkZ, String world, Timestamp createdAt, Timestamp updatedAt, boolean allowExplosions) {
         this.id = id;
         this.userID = userID;
         this.chunkZ = chunkZ;
@@ -23,19 +23,19 @@ public class Claim {
         this.allowExplosions = allowExplosions;
     }
 
-    public long getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(int id) {
         this.id = id;
     }
 
-    public long getUserID() {
+    public int getUserID() {
         return userID;
     }
 
-    public void setUserID(long userID) {
+    public void setUserID(int userID) {
         this.userID = userID;
     }
 
@@ -81,7 +81,7 @@ public class Claim {
         this.updatedAt = updatedAt;
     }
 
-    public boolean isAllowExplosions() {
+    public boolean getAllowExplosions() {
         return allowExplosions;
     }
 
