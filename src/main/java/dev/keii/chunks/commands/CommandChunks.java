@@ -69,8 +69,9 @@ public class CommandChunks implements CommandExecutor {
             case "reload":
                 reload(sender);
                 break;
-            case "help":
             default:
+                sender.sendMessage(Component.text("Invalid argument '" + args[0] + "'!").appendNewline());
+            case "help":
                 sendHelp(sender);
         }
 
