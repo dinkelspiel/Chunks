@@ -1,6 +1,6 @@
 package dev.keii.chunks;
 
-import dev.keii.chunks.database.Claim;
+import dev.keii.chunks.models.Claim;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -17,101 +17,6 @@ import java.util.Map;
 
 public class PlayerChunk {
     static Map<Long, Claim> claimCache = new HashMap<>();
-
-    public static boolean getPlayerOwnsChunk(Player player, org.bukkit.Chunk chunk) {
-        try {
-            Connection connection = Database.getConnection();
-            Statement statement = connection.createStatement();
-
-            String userQuery = "SELECT id FROM user WHERE uuid = \"" + player.getUniqueId() + "\"";
-            ResultSet userResultSet = statement.executeQuery(userQuery);
-
-            if (!userResultSet.next()) {
-                userResultSet.close();
-                statement.close();
-                connection.close();
-                return false;
-            }
-
-            int userId = userResultSet.getInt("id");
-
-            String query = "SELECT user_id FROM claim WHERE chunk_x = " + chunk.getX() + " AND chunk_z = " + chunk.getZ() + " AND world = '" + chunk.getWorld().getName() + "'";
-            ResultSet resultSet = statement.executeQuery(query);
-
-            if (!resultSet.next()) {
-                userResultSet.close();
-                resultSet.close();
-                statement.close();
-                connection.close();
-                return false;
-            }
-
-//            Bukkit.broadcastMessage("DB: " + resultSet.getInt("user_id")  + " Local: " + userId);
-            if (resultSet.getInt("user_id") != userId) {
-                userResultSet.close();
-                resultSet.close();
-                statement.close();
-                connection.close();
-                return false;
-            }
-            // Close resources
-            resultSet.close();
-            statement.close();
-            connection.close();
-            return true;
-        } catch (SQLException e) {
-            Bukkit.getServer().broadcast(Component.text("Fatal Database Error: " + e.getMessage()).color(NamedTextColor.RED));
-        }
-        return false;
-    }
-
-    public static boolean getPlayerCanModifyChunk(Player player, org.bukkit.Chunk chunk) {
-        try {
-            Connection connection = Database.getConnection();
-            Statement statement = connection.createStatement();
-
-            String userQuery = "SELECT id FROM user WHERE uuid = \"" + player.getUniqueId() + "\"";
-            ResultSet userResultSet = statement.executeQuery(userQuery);
-
-            if (!userResultSet.next()) {
-                userResultSet.close();
-                statement.close();
-                connection.close();
-                return true;
-            }
-
-            int userId = userResultSet.getInt("id");
-
-            String query = "SELECT user_id FROM claim WHERE chunk_x = " + chunk.getX() + " AND chunk_z = " + chunk.getZ() + " AND world = '" + chunk.getWorld().getName() + "'";
-            ResultSet resultSet = statement.executeQuery(query);
-
-            if (!resultSet.next()) {
-                userResultSet.close();
-                resultSet.close();
-                statement.close();
-                connection.close();
-                return true;
-            }
-
-//            Bukkit.broadcastMessage("DB: " + resultSet.getInt("user_id")  + " Local: " + userId);
-            if (resultSet.getLong("user_id") != userId) {
-                userResultSet.close();
-                resultSet.close();
-                statement.close();
-                connection.close();
-                return false;
-            }
-            // Close resources
-            userResultSet.close();
-            resultSet.close();
-            statement.close();
-            connection.close();
-            return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
 
     @Nullable
     public static String getChunkOwner(org.bukkit.Chunk chunk) {

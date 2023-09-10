@@ -4,9 +4,9 @@ import dev.keii.barter.commands.CommandChunks;
 import dev.keii.chunks.commands.ChunkOverride;
 import dev.keii.chunks.commands.ClaimPower;
 import dev.keii.chunks.commands.CommandMap;
-import dev.keii.chunks.database.Claim;
-import dev.keii.chunks.database.ClaimPermission;
-import dev.keii.chunks.database.User;
+import dev.keii.chunks.models.Claim;
+import dev.keii.chunks.models.ClaimPermission;
+import dev.keii.chunks.models.User;
 import dev.keii.chunks.events.*;
 import dev.keii.chunks.tabcomplete.TabCompleteChunks;
 import dev.keii.chunks.tabcomplete.TabCompleteClaimPower;
@@ -18,8 +18,6 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 

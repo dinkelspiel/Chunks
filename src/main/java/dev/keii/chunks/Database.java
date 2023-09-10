@@ -1,8 +1,8 @@
 package dev.keii.chunks;
 
-import dev.keii.chunks.database.Claim;
-import dev.keii.chunks.database.ClaimPermission;
-import dev.keii.chunks.database.User;
+import dev.keii.chunks.models.Claim;
+import dev.keii.chunks.models.ClaimPermission;
+import dev.keii.chunks.models.User;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 

@@ -1,4 +1,4 @@
-package dev.keii.chunks.database;
+package dev.keii.chunks.models;
 
 import java.sql.Timestamp;
 

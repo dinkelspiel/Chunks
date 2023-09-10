@@ -1,5 +1,10 @@
-package dev.keii.chunks.database;
+package dev.keii.chunks.models;
 
+import dev.keii.chunks.Chunks;
+import org.bukkit.Chunk;
+import org.bukkit.entity.Player;
+
+import javax.annotation.Nullable;
 import java.sql.Timestamp;
 
 public class Claim {
@@ -21,6 +26,37 @@ public class Claim {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.allowExplosions = allowExplosions;
+    }
+
+    public static boolean isPlayerOwner(Player player, Chunk chunk)
+    {
+        User user = User.fromUuid(player.getUniqueId().toString());
+
+        if(user == null)
+        {
+            return false;
+        }
+
+        for(Claim claim : Chunks.claims)
+        {
+            if(claim.getChunkX() == chunk.getX() && claim.getChunkZ() == chunk.getZ() && claim.getWorld().equals(chunk.getWorld().getName()) && claim.getUserID() == user.getId())
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Nullable
+    public static User getOwner(Chunk chunk)
+    {
+        for(Claim claim : Chunks.claims)
+        {
+            if(claim.getChunkX() == chunk.getX() && claim.getChunkZ() == chunk.getZ() && claim.getWorld().equals(chunk.getWorld().getName()))
+            {
+                for(User user : )
+            }
+        }
     }
 
     public int getId() {
