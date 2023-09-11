@@ -1,7 +1,9 @@
 package dev.keii.chunks.events;
 
-import dev.keii.chunks.PlayerChunk;
 import dev.keii.chunks.commands.ChunkOverride;
+import dev.keii.chunks.models.Claim;
+import dev.keii.chunks.models.ClaimPermission;
+import dev.keii.chunks.models.User;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Chunk;
@@ -15,25 +17,36 @@ public class PlayerInteract implements Listener {
     public void onPlayerInteract(PlayerInteractEvent event)
     {
         Player player = event.getPlayer();
-
-        if(event.getClickedBlock() == null)
-        {
-            event.setCancelled(false);
-            return;
-        }
-
-        if(ChunkOverride.getChunkOverrideForPlayer(player))
-        {
-            event.setCancelled(false);
-            return;
-        }
-
         Chunk chunk = event.getClickedBlock().getChunk();
 
-        boolean canBreak = BlockBreak.getPlayerPermissionForChunk(player, chunk, PlayerChunk.ChunkPermission.Interact);
+        Claim claim = Claim.fromChunk(chunk);
 
-        event.setCancelled(!canBreak);
-        if(!canBreak)
+        if(ChunkOverride.getChunkOverrideForPlayer(player) || claim == null)
+        {
+            event.setCancelled(false);
+            return;
+        }
+
+        User user = User.fromUuid(player.getUniqueId().toString());
+
+        if(user == null)
+        {
+            event.setCancelled(false);
+            return;
+        }
+
+        ClaimPermission claimPermission = claim.getPermissionsForUser(user);
+
+        if(claimPermission == null)
+        {
+            event.setCancelled(false);
+            return;
+        }
+
+        boolean hasPermission = claimPermission.getInteract();
+
+        event.setCancelled(!hasPermission);
+        if(!hasPermission)
         {
             player.sendActionBar(Component.text("You do not have the rights to interact with this chunk!").color(NamedTextColor.RED));
         }

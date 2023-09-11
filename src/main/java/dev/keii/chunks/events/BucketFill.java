@@ -1,8 +1,10 @@
 package dev.keii.chunks.events;
 
 import dev.keii.chunks.Chunks;
-import dev.keii.chunks.PlayerChunk;
 import dev.keii.chunks.commands.ChunkOverride;
+import dev.keii.chunks.models.Claim;
+import dev.keii.chunks.models.ClaimPermission;
+import dev.keii.chunks.models.User;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Chunk;
@@ -18,16 +20,34 @@ public class BucketFill implements Listener {
         Player player = event.getPlayer();
         Chunk chunk = event.getBlock().getChunk();
 
-        if(ChunkOverride.getChunkOverrideForPlayer(player))
+        Claim claim = Claim.fromChunk(chunk);
+
+        if(ChunkOverride.getChunkOverrideForPlayer(player) || claim == null)
         {
             event.setCancelled(false);
             return;
         }
 
-        boolean canBreak = BlockBreak.getPlayerPermissionForChunk(player, chunk, PlayerChunk.ChunkPermission.BucketFill);
+        User user = User.fromUuid(player.getUniqueId().toString());
 
-        event.setCancelled(!canBreak);
-        if(!canBreak)
+        if(user == null)
+        {
+            event.setCancelled(false);
+            return;
+        }
+
+        ClaimPermission claimPermission = claim.getPermissionsForUser(user);
+
+        if(claimPermission == null)
+        {
+            event.setCancelled(false);
+            return;
+        }
+
+        boolean hasPermission = claimPermission.getBucketFill();
+
+        event.setCancelled(!hasPermission);
+        if(!hasPermission)
         {
             player.sendActionBar(Component.text("You do not have the rights to fill buckets in this chunk!").color(NamedTextColor.RED));
         }

@@ -1,10 +1,9 @@
 package dev.keii.chunks.events;
 
-import dev.keii.chunks.error.*;
-import dev.keii.chunks.Chunks;
-import dev.keii.chunks.PlayerChunk;
 import dev.keii.chunks.error.Success;
 import dev.keii.chunks.inventories.InventoryChunkPermission;
+import dev.keii.chunks.models.Claim;
+import dev.keii.chunks.models.User;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
@@ -32,7 +31,21 @@ public class PlayerChat implements Listener {
         if(chunkListener.get(player.getUniqueId().toString()) instanceof ChunkPermissionAddPlayer)
             event.setCancelled(true);
 
-        var result = PlayerChunk.addChunkPermissionsForUser(player, event.getMessage(), ((ChunkPermissionAddPlayer)chunkListener.get(player.getUniqueId().toString())).getChunk());
+        Claim claim = Claim.fromChunk(((ChunkPermissionAddPlayer)chunkListener.get(player.getUniqueId().toString())).getChunk());
+
+        if(claim == null)
+        {
+            return;
+        }
+
+        User user = User.fromNickname(event.getMessage());
+        if(user == null)
+        {
+            player.sendMessage(Component.text("Failed: Invalid username").color(NamedTextColor.RED));
+            return;
+        }
+
+        var result = claim.addChunkPermissionsForUser(player, user);
 
         if(result instanceof Success) {
             player.sendMessage(Component.text("Permissions added for player").color(NamedTextColor.GREEN));

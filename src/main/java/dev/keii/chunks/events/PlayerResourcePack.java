@@ -1,6 +1,5 @@
 package dev.keii.chunks.events;
 
-import dev.keii.chunks.PlayerChunk;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;

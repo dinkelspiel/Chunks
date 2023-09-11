@@ -23,6 +23,7 @@ commands:
 permissions:
   keii.chunks.map:
     description: Permission to see the map
+
   keii.chunks.staffmessage:
     description: Get sent staff messages
   keii.chunks.claimpower:
@@ -31,3 +32,7 @@ permissions:
     description: Override chunk permissions
   keii.chunks.reload:
     description: Reload chunks config
+  keii.chunks.save:
+    description: Save chunks to disk
+  keii.chunks.load:
+    description: Load chunks from disk
