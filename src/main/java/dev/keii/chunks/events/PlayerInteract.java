@@ -17,6 +17,12 @@ public class PlayerInteract implements Listener {
     public void onPlayerInteract(PlayerInteractEvent event)
     {
         Player player = event.getPlayer();
+
+        if(event.getClickedBlock() == null)
+        {
+            return;
+        }
+
         Chunk chunk = event.getClickedBlock().getChunk();
 
         Claim claim = Claim.fromChunk(chunk);

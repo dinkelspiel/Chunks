@@ -23,7 +23,7 @@ public class Database {
               created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
               updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
               allow_explosions INTEGER NOT NULL DEFAULT 0
-            );
+            )
     """;
     private static final String createClaimPermissionTableSQL = """
             CREATE TABLE IF NOT EXISTS claim_permission (
@@ -36,8 +36,8 @@ public class Database {
               bucket_fill INTEGER NOT NULL DEFAULT 0,
               interact INTEGER NOT NULL DEFAULT 0,
               created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-              updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            );
+              updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
     """;
     private static final String createUserTableSQL = """
             CREATE TABLE IF NOT EXISTS user (
@@ -46,7 +46,7 @@ public class Database {
               uuid TEXT NOT NULL,
               timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
               claim_power INTEGER NOT NULL DEFAULT 10
-            );
+            )
     """;
 
     public static void initializeDatabase()

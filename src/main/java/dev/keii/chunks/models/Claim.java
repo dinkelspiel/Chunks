@@ -1,12 +1,9 @@
 package dev.keii.chunks.models;
 
 import dev.keii.chunks.Chunks;
-import dev.keii.chunks.Database;
-import dev.keii.chunks.error.Failure;
 import dev.keii.chunks.error.Result;
-import dev.keii.chunks.error.Success;
+import kotlin.ResultKt;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -44,16 +41,16 @@ public class Claim {
     }
 
     @Nullable
-    public static Claim fromChunk(Chunk chunk)
+    public static Result<Claim, String> fromChunk(Chunk chunk)
     {
         for(Claim claim : Chunks.claims)
         {
-            if(claim.getChunkX() == chunk.getX() && claim.getChunkZ() == chunk.getZ() && claim.getWorld().equals(chunk.getWorld().getName()))
+            if(claim.getChunkX() == chunk.getX() && claim.getChunkZ() == chunk.getZ() && claim.getWorld().getName().equals(chunk.getWorld().getName()))
             {
-                return claim;
+                return Result.success(claim);
             }
         }
-        return null;
+        return Result.failure("Couldn't find claim");
     }
 
     public static boolean isPlayerOwner(Player player, Chunk chunk)
@@ -92,54 +89,54 @@ public class Claim {
         return null;
     }
 
-    public static boolean claim(Player player, Chunk chunk)
+    public static Result<String, String> claim(Player player, Chunk chunk)
     {
         if(Claim.fromChunk(chunk) != null)
         {
-            return false;
+            return Result.failure("Claim already exists at chunk");
         }
 
-        User user = User.fromUuid(player.getUniqueId().toString());
+        User user = User.fromPlayer(player);
 
         if(user == null)
         {
-            return false;
+            return Result.failure("No user found for player");
         }
 
         Claim[] claims = user.getClaims();
 
         if(claims.length >= user.getClaimPower())
         {
-            player.sendMessage(Component.text("Not enough power to claim chunk").color(NamedTextColor.RED));
-            return false;
+            return Result.failure("Not enough power to claim chunk" + claims.length + " " + user.getClaimPower());
         }
 
         Claim claim = new Claim(Chunks.claimsAutoIncrement++, user.getId(), chunk.getX(), chunk.getZ(), chunk.getWorld(), new Timestamp(System.currentTimeMillis()), new Timestamp(System.currentTimeMillis()), false);
         Chunks.claims.add(claim);
         claim.showChunkPerimeter(player);
 
-        var result = claim.addChunkPermissionsForUser(player, null);
+        claim.addChunkPermissionsForUser(player, null).match(
+                success -> true,
+                failure -> {
+                    player.sendMessage(Component.text(failure));
+                    return true;
+                }
+        );
 
-        if(result instanceof Failure)
-        {
-            player.sendMessage(Component.text(result.getMessage()));
-        }
-
-        return true;
+        return Result.success("Claimed chunk");
     }
 
-    public boolean unClaim(Player player)
+    public Result<String, String> unClaim(Player player)
     {
         User user = User.fromPlayer(player);
 
         if(user == null)
         {
-            return false;
+            return Result.failure("No user found for player");
         }
 
         if(getUserID() != user.getId())
         {
-            return false;
+            return Result.failure("User isn't owner for chunk");
         }
 
         List<Integer> removeList = new ArrayList<>();
@@ -158,48 +155,51 @@ public class Claim {
         }
 
         Chunks.claims.removeIf((Claim c) -> c.getUserID() == user.getId() && c.getChunkX() == getChunkX() && c.getChunkZ() == getChunkZ() && c.getWorld().getName().equals(getWorld().getName()));
-        return true;
+        return Result.success("Unclaimed chunk");
     }
 
-    public boolean toggleExplosionPolicy(Player player)
+    public Result<Boolean, String> toggleExplosionPolicy(Player player)
     {
         User user = User.fromPlayer(player);
 
         if(user == null)
         {
-            return false;
+            return Result.failure("No user found for player");
         }
 
         if(getUserID() != user.getId())
         {
-            return false;
+            return Result.failure("User isn't owner for chunk");
         }
 
         setAllowExplosions(!getAllowExplosions());
 
-        return true;
+        return Result.success(getAllowExplosions());
     }
 
-    public Result addChunkPermissionsForUser(Player player, @Nullable User targetUser)
+    public Result<String, String> addChunkPermissionsForUser(Player player, @Nullable User targetUser)
     {
         User user = User.fromUuid(player.getUniqueId().toString());
 
         if(user == null)
         {
-            return new Failure("No user exists with uuid");
+            return Result.failure("No user exists with uuid");
         }
 
         if(getUserID() != user.getId())
         {
-            return new Failure("Player doesn't have permission to update chunk");
+            return Result.failure("Player doesn't have permission to update chunk");
         }
 
         if(targetUser == null)
         {
-            ClaimPermission claimPermission = ClaimPermission.get(null, this);
+            ClaimPermission claimPermission = ClaimPermission.get(null, this).match(
+                    success -> success,
+                    failure -> null
+            );
             if(claimPermission != null)
             {
-                return new Failure("Everyone already exists on chunk");
+                return Result.failure("Everyone already exists on chunk");
             }
 
             Chunks.claimPermissions.add(new ClaimPermission(
@@ -215,19 +215,22 @@ public class Claim {
                     new Timestamp(System.currentTimeMillis())
             ));
 
-            return new Success("Created everyone permission");
+            return Result.success("Created everyone permission");
         }
 
         if(targetUser.getId() == user.getId())
         {
-            return new Failure("Target can't be the same as user");
+            return Result.failure("Target can't be the same as user");
         }
 
-        ClaimPermission claimPermission = ClaimPermission.get(targetUser, this);
+        ClaimPermission claimPermission = ClaimPermission.get(targetUser, this).match(
+                success -> success,
+                failure -> null
+        );
 
         if(claimPermission != null)
         {
-            return new Failure("Target permission already exists on chunk");
+            return Result.failure("Target permission already exists on chunk");
         }
 
         Chunks.claimPermissions.add(new ClaimPermission(
@@ -243,7 +246,7 @@ public class Claim {
                 new Timestamp(System.currentTimeMillis())
         ));
 
-        return new Success("Created permission");
+        return Result.success("Created permission");
     }
 
     private void showChunkPerimeter(Player player) {
@@ -345,21 +348,24 @@ public class Claim {
         return "";
     }
 
-    public boolean setPermission(Player player, @Nullable User targetUser, ChunkPermission permission, boolean value)
+    public Result<String, String> setPermission(Player player, @Nullable User targetUser, ChunkPermission permission, boolean value)
     {
         User user = User.fromPlayer(player);
 
         if(user == null)
         {
-            return false;
+            return Result.failure("No user found for player");
         }
 
         if(getUserID() != user.getId())
         {
-            return false;
+            return Result.failure("User isn't chunk owner");
         }
 
-        ClaimPermission claimPermission = ClaimPermission.get(targetUser, this);
+        ClaimPermission claimPermission = ClaimPermission.get(targetUser, this).match(
+                success -> success,
+                failure -> null
+        );
 
         if(claimPermission == null)
         {
@@ -386,13 +392,16 @@ public class Claim {
             case BucketFill -> claimPermission.setBucketFill(value);
         }
 
-        return true;
+        return Result.success("Added permissions for user");
     }
 
     @Nullable
     public ClaimPermission getPermissionsForUser(User user)
     {
-        return ClaimPermission.get(user, this);
+        return ClaimPermission.get(user, this).match(
+                success -> success,
+                failure -> null
+        );
     }
 
     public int getId() {

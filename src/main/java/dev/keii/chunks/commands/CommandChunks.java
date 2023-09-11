@@ -37,7 +37,7 @@ public class CommandChunks implements CommandExecutor {
                         .appendNewline()
                         .append(Component.text("/claimpower [set,add,remove] <player> <amount> - Modify claimpower of user").color(NamedTextColor.GOLD))
                         .appendNewline()
-                        .append(Component.text("/chunkoverride <player?> - Override chunkpermissions").color(NamedTextColor.GOLD))
+                        .append(Component.text("/chunkoverride <player>? - Override chunkpermissions").color(NamedTextColor.GOLD))
         );
     }
 

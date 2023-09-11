@@ -5,6 +5,8 @@ import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class User {
@@ -76,23 +78,16 @@ public class User {
 
     public Claim[] getClaims()
     {
-        Claim[] claims = new Claim[getClaimPower()];
+        List<Claim> claims = new ArrayList<>();
         for(Claim claim : Chunks.claims)
         {
             if(claim.getUserID() == getId())
             {
-                for(var i = 0; i < claims.length; i++)
-                {
-                    if(claims[i] == null)
-                    {
-                        claims[i] = claim;
-                        break;
-                    }
-                }
+                claims.add(claim);
             }
         }
 
-        return claims;
+        return claims.toArray(Claim[]::new);
     }
 
     public int getId() {

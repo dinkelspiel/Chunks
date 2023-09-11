@@ -1,6 +1,7 @@
 package dev.keii.chunks.models;
 
 import dev.keii.chunks.Chunks;
+import dev.keii.chunks.error.Result;
 
 import javax.annotation.Nullable;
 import java.sql.Timestamp;
@@ -33,24 +34,23 @@ public class ClaimPermission {
         this.updatedAt = updatedAt;
     }
 
-    @Nullable
-    public static ClaimPermission get(@Nullable User user, Claim claim)
+    public static Result<ClaimPermission, String> get(@Nullable User user, Claim claim)
     {
         for(ClaimPermission claimPermission : Chunks.claimPermissions)
         {
             if(user == null) {
                 if (claim.getId() == claimPermission.getClaimId() && claimPermission.getUserId() == null)
                 {
-                    return claimPermission;
+                    return Result.success(claimPermission);
                 }
             } else {
                 if(claim.getId() == claimPermission.getClaimId() && user.getId() == claimPermission.getUserId())
                 {
-                    return claimPermission;
+                    return Result.success(claimPermission);
                 }
             }
         }
-        return null;
+        return Result.failure("No claim permission found");
     }
 
     public int getId() {

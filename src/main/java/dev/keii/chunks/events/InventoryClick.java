@@ -8,7 +8,6 @@ import dev.keii.chunks.inventories.InventoryModifyChunkPermission;
 import dev.keii.chunks.models.User;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -21,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class InventoryClick implements Listener {
     public static Map<String, Vector2i> modifyChunk = new HashMap<>();
@@ -59,26 +59,41 @@ public class InventoryClick implements Listener {
                 Claim claim = Claim.fromChunk(event.getWhoClicked().getWorld().getChunkAt(chunkX, chunkZ));
 
                 if(claim != null) {
-                    if (claim.getOwner() != null) {
-                        if (claim.getOwner().getUuid().toString().equals(player.getUniqueId().toString())) {
-                            player.closeInventory();
-                            InventoryModifyChunk mc = new InventoryModifyChunk();
-                            InventoryClick.modifyChunk.remove(player.getUniqueId().toString());
-                            InventoryClick.modifyChunk.put(player.getUniqueId().toString(), new Vector2i(chunkX, chunkZ));
-                            player.openInventory(mc.getInventory());
-                        }
-                        return;
+                    if (claim.getOwner().getUuid().toString().equals(player.getUniqueId().toString())) {
+                        player.closeInventory();
+                        InventoryModifyChunk mc = new InventoryModifyChunk();
+                        InventoryClick.modifyChunk.remove(player.getUniqueId().toString());
+                        InventoryClick.modifyChunk.put(player.getUniqueId().toString(), new Vector2i(chunkX, chunkZ));
+                        player.openInventory(mc.getInventory());
                     }
+                    return;
                 }
 
-                if(Claim.claim(player, event.getWhoClicked().getWorld().getChunkAt(chunkX, chunkZ))) {
-                    claim = Claim.fromChunk(event.getWhoClicked().getWorld().getChunkAt(chunkX, chunkZ));
-                    assert claim != null;
-                    claim.addChunkPermissionsForUser(player, null);
-                    player.sendMessage(Component.text("Claimed Chunk").color(NamedTextColor.YELLOW));
-                } else {
-                    player.sendMessage(Component.text("Failed to claim chunk").color(NamedTextColor.RED));
-                }
+                Integer finalChunkX = chunkX;
+                Integer finalChunkZ = chunkZ;
+                Claim.claim(player, event.getWhoClicked().getWorld().getChunkAt(chunkX, chunkZ)).match(
+                        success -> {
+                            player.sendMessage(finalChunkX + " " + finalChunkZ);
+                            final Claim[] newClaim = {null};
+                            Claim.fromChunk(event.getWhoClicked().getWorld().getChunkAt(finalChunkX, finalChunkZ)).match(
+                                    succs -> {
+                                        newClaim[0] = succs;
+                                    },
+                                    fail -> {
+                                        player.sendMessage(Component.text("Failed to claim chunk: " + fail).color(NamedTextColor.RED));
+                                    }
+                            );
+                            if(newClaim[0] == null)
+                            {
+                                return;
+                            }
+                            newClaim[0].addChunkPermissionsForUser(player, null);
+                            player.sendMessage(Component.text("Claimed Chunk").color(NamedTextColor.YELLOW));
+                        },
+                        failure -> {
+                            player.sendMessage(Component.text("Failed to claim chunk: " + failure).color(NamedTextColor.RED));
+                        }
+                );
 
                 player.closeInventory();
                 InventoryMap map = new InventoryMap(player);
@@ -105,32 +120,24 @@ public class InventoryClick implements Listener {
 
             if(slot > 5)
             {
-                if(claim.unClaim(player)) {
-                    player.sendMessage(Component.text("Unclaimed chunk").color(NamedTextColor.YELLOW));
-                    player.closeInventory();
+                claim.unClaim(player).match(
+                        success -> {
+                            player.sendMessage(Component.text("Unclaimed chunk").color(NamedTextColor.YELLOW));
+                            player.closeInventory();
 
-                    InventoryMap map = new InventoryMap(player);
-                    player.openInventory(map.getInventory());
-                } else {
-                    player.sendMessage(Component.text("Failed to unclaim chunk").color(NamedTextColor.RED));
-                }
+                            InventoryMap map = new InventoryMap(player);
+                            player.openInventory(map.getInventory());
+                        },
+                        failure -> {
+                            player.sendMessage(Component.text("Failed to unclaim chunk: " + failure).color(NamedTextColor.RED));
+                        }
+                );
             } else if(slot > 2)
             {
-                if(!claim.toggleExplosionPolicy(player))
-                {
-                    player.sendMessage(Component.text("Failed to toggle explosions for chunk").color(NamedTextColor.RED));
-                    return;
-                }
-
-                if(claim.getAllowExplosions())
-                {
-                    player.sendMessage(Component.text("Enabled explosions in chunk").color(NamedTextColor.YELLOW));
-                } else
-                {
-                    player.sendMessage(Component.text("Disabled explosions in chunk").color(NamedTextColor.YELLOW));
-                }
-
-
+                claim.toggleExplosionPolicy(player).match(
+                        (Boolean success) -> player.sendMessage(Component.text((success ? "Enabled" : "Disbled") + " explosions in chunk").color(NamedTextColor.YELLOW)),
+                        failure -> player.sendMessage(Component.text("Failed to toggle explosions for chunk: " + failure).color(NamedTextColor.RED))
+                );
             } else {
                 player.closeInventory();
                 InventoryChunkPermission cp = new InventoryChunkPermission(claim.getChunk());

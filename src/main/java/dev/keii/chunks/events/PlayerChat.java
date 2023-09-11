@@ -1,6 +1,5 @@
 package dev.keii.chunks.events;
 
-import dev.keii.chunks.error.Success;
 import dev.keii.chunks.inventories.InventoryChunkPermission;
 import dev.keii.chunks.models.Claim;
 import dev.keii.chunks.models.User;
@@ -45,17 +44,17 @@ public class PlayerChat implements Listener {
             return;
         }
 
-        var result = claim.addChunkPermissionsForUser(player, user);
+        claim.addChunkPermissionsForUser(player, user).match(
+                success -> {
+                    player.sendMessage(Component.text("Permissions added for player").color(NamedTextColor.GREEN));
+                    player.closeInventory();
+                    InventoryChunkPermission cp = new InventoryChunkPermission(((ChunkPermissionAddPlayer) chunkListener.get(player.getUniqueId().toString())).getChunk());
+                    player.openInventory(cp.getInventory());
+                },
+                failure -> {
+                    player.sendMessage(Component.text("Failed: " + failure).color(NamedTextColor.RED));
 
-        if(result instanceof Success) {
-            player.sendMessage(Component.text("Permissions added for player").color(NamedTextColor.GREEN));
-            player.closeInventory();
-            InventoryChunkPermission cp = new InventoryChunkPermission(((ChunkPermissionAddPlayer)chunkListener.get(player.getUniqueId().toString())).getChunk());
-            player.openInventory(cp.getInventory());
-        } else {
-            player.sendMessage(Component.text("Failed: " + result.getMessage()).color(NamedTextColor.RED));
-
-        }
+                });
 
         chunkListener.remove(player.getUniqueId().toString());
     }
